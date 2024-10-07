@@ -1,0 +1,5 @@
+
+
+SELECT * FROM colores;
+
+INSERT INTO colores(usuario, color) VALUE();
