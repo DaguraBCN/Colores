@@ -1,4 +1,5 @@
 <?php
+session_start(); // Iniciar sesión para manejar mensajes de error
 
 // Llamar al fichero de conexión una vez
 include_once 'connection.php';
@@ -7,38 +8,44 @@ include_once 'connection.php';
 $querySelectAll = "SELECT * FROM colores";
 
 // Preparar la ejecución
-$querySelectAll = $conn -> prepare($querySelectAll);
+$querySelectAll = $conn->prepare($querySelectAll);
 
 // Ejecución de la petición a la base de datos
-$querySelectAll -> execute();
+$querySelectAll->execute();
 
 // Guardar el resultado como array asociativo
-$resultado = $querySelectAll ->  fetchAll(); 
+$resultado = $querySelectAll->fetchAll(); 
+
+// Lista de colores válidos
+$coloresValidos = ['red', 'green', 'blue', 'yellow', 'pink', 'white'];
+$errorMessage = isset($_SESSION['error']) ? $_SESSION['error'] : ''; // Recuperar el mensaje de error
+unset($_SESSION['error']); // Limpiar el mensaje de error
 
 if ($_POST) {
     // Guardar los valores introducidos por el usuario
-    $user = $_POST['usuario'];
-    $color = $_POST['color'];
+    $user = trim($_POST['usuario']);
+    $color = trim($_POST['color']);
 
-    // Insertar en la base de datos
-    $queryInsert = "INSERT INTO colores (usuario, color) VALUES(?, ?)";
-    $sqlInsert = $conn -> prepare($queryInsert);
-    $sqlInsert -> execute(array($user, $color));
+    // Validar campos vacíos
+    if (empty($user) || empty($color)) {
+        $_SESSION['error'] = 'Los campos no pueden estar vacíos.';
+    } elseif (!in_array(strtolower($color), $coloresValidos)) {
+        $_SESSION['error'] = 'No existe el color indicado.';
+    } else {
+        // Insertar en la base de datos
+        $queryInsert = "INSERT INTO colores (usuario, color) VALUES(?, ?)";
+        $sqlInsert = $conn->prepare($queryInsert);
+        $sqlInsert->execute(array($user, $color));
 
-    // Resetear el query
-    $sqlInsert = null;
-    $conn = null;
+        // Resetear el query
+        $sqlInsert = null;
+        $conn = null;
 
-    // Refrescar la página
-    header('location: index.php');
-
+        // Refrescar la página
+        header('location: index.php');
+        exit;
+    }
 }
-
-// var_dump($resultado);
-if ($_GET){
-    var_dump($_GET);
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -52,59 +59,57 @@ if ($_GET){
 </head>
 <body>
     <header>
-        <h1> Colores preferidos</h1>
+        <h1>Colores preferidos</h1>
     </header>
     <main>
         <section>
             <h2>Colores elegidos</h2>
             <div>
-
                 <?php foreach ($resultado as $fila) : ?>
-                <div class= "respuesta" style="color: <?= $fila['color'] ?>; border-color: <?= $fila['color'] ?>;">
-                   <p><?= $fila['usuario'] ?> : <?= $fila['color'] ?></p> 
+                <div class="respuesta" style="color: <?= htmlspecialchars($fila['color']) ?>; border-color: <?= htmlspecialchars($fila['color']) ?>;">
+                   <p><?= htmlspecialchars($fila['usuario']) ?> : <?= htmlspecialchars($fila['color']) ?></p> 
                    <p>
-                    <a href="index.php?id=<?= $fila['id_colores'] ?>&user=<?= $fila['usuario'] ?>&<?= $fila['color'] ?>">
-                        <span style="color: <?= $fila['color'] ?>;"><i class="fa-solid fa-pen"></i></span>
+                    <a href="index.php?id=<?= htmlspecialchars($fila['id_colores']) ?>&user=<?= htmlspecialchars($fila['usuario']) ?>&color=<?= htmlspecialchars($fila['color']) ?>">
+                        <span style="color: <?= htmlspecialchars($fila['color']) ?>;"><i class="fa-solid fa-pen"></i></span>
                     </a>
-                    <a href="delete.php?id=<?= $fila['id_colores'] ?>">
-                        <span style="color: <?= $fila['color'] ?>;"><i class="fa-solid fa-trash"></i></span>
+                    <a href="delete.php?id=<?= htmlspecialchars($fila['id_colores']) ?>">
+                        <span style="color: <?= htmlspecialchars($fila['color']) ?>;"><i class="fa-solid fa-trash"></i></span>
+                        <span style="color: <?= htmlspecialchars($fila['color']) ?>;"><i class="fa-solid fa-trash fa-beat-fade"></i></span>
                     </a>
                    </p>
                 </div>
-                
                 <?php endforeach; ?>
             </div>
         </section>
         <section>
-            
-            <?php if(!$_GET) : ?>
+            <?php if(!isset($_GET['id'])) : ?>
             <h2>Introduce tu color preferido</h2>
             <form method="post">
                 <label for="usuario">Escribe tu nombre</label>
                 <input type="text" name="usuario" id="usuario" required>
                 <label for="color">Tu color favorito es...</label>
                 <input type="text" name="color" id="color" required>
-                <div class="error">
-                    <p>No se permite ese color</p>
+                <div class="error" style="color: red;">
+                    <p><?= htmlspecialchars($errorMessage) ?></p>
                 </div>
                 <button type="submit">Enviar</button>
             </form>
             <?php endif; ?>
 
-            <?php if($_GET) : ?>
+            <?php if(isset($_GET['id'])) : ?>
             <h2>Modifica tus preferencias</h2>
             <form method="get" action="update.php">
-                <label for="usuario">Escribe tu nombre</label>
-                <input type="text" name="usuario" id="usuario" required>
-                <label for="color">Tu color favorito es...</label>
-                <input type="text" name="color" id="color" required>
-                <div class="error">
+                <label for="usuario">Edita tu nombre</label>
+                <input type="hidden" name="id" id="id" value="<?= htmlspecialchars($_GET['id']); ?>">
+                <input type="text" name="usuario" id="usuario" value="<?= isset($_GET['user']) ? htmlspecialchars($_GET['user']) : ''; ?>" required>
+                <label for="color">Edita tu color favorito es...</label>
+                <input type="text" name="color" id="color" value="<?= isset($_GET['color']) ? htmlspecialchars($_GET['color']) : ''; ?>" required>
+                <div class="error" style="color: red; display: <?= $errorMessage ? 'block' : 'none' ?>;">
                     <p>No se permite ese color</p>
                 </div>
                 <button type="submit">Enviar</button>
             </form>
             <?php endif; ?>
-
         </section>
     </main>
 </body>
