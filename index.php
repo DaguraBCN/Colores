@@ -69,12 +69,11 @@ if ($_POST) {
                 <div class="respuesta" style="color: <?= htmlspecialchars($fila['color']) ?>; border-color: <?= htmlspecialchars($fila['color']) ?>;">
                    <p><?= htmlspecialchars($fila['usuario']) ?> : <?= htmlspecialchars($fila['color']) ?></p> 
                    <p>
-                    <a href="index.php?id=<?= htmlspecialchars($fila['id_colores']) ?>&user=<?= htmlspecialchars($fila['usuario']) ?>&color=<?= htmlspecialchars($fila['color']) ?>">
+                    <a href="index.php?id=<?= htmlspecialchars($fila['id_colores']) ?>&user=<?= htmlspecialchars($fila['usuario']) ?>&color=<?= htmlspecialchars($fila['color']) ?>" id="edicion<?=($fila['id_colores'])?>">
                         <span style="color: <?= htmlspecialchars($fila['color']) ?>;"><i class="fa-solid fa-pen"></i></span>
                     </a>
-                    <a href="delete.php?id=<?= htmlspecialchars($fila['id_colores']) ?>">
-                        <span style="color: <?= htmlspecialchars($fila['color']) ?>;"><i class="fa-solid fa-trash"></i></span>
-                        <span style="color: <?= htmlspecialchars($fila['color']) ?>;"><i class="fa-solid fa-trash fa-beat-fade"></i></span>
+                    <a href="delete.php?id=<?= htmlspecialchars($fila['id_colores']) ?>" id="basura<?=($fila['id_colores'])?>">
+                        <span style="color: <?= htmlspecialchars($fila['color']) ?>;" class="icon"><i class="fa-solid fa-trash"></i></span>
                     </a>
                    </p>
                 </div>
@@ -92,7 +91,10 @@ if ($_POST) {
                 <div class="error" style="color: red;">
                     <p><?= htmlspecialchars($errorMessage) ?></p>
                 </div>
-                <button type="submit">Enviar</button>
+                <div>
+                    <button type="submit">Enviar</button>
+                    <a href="index.php"><button type="button">Cancelar</button></a>
+                </div>
             </form>
             <?php endif; ?>
 
@@ -107,10 +109,40 @@ if ($_POST) {
                 <div class="error" style="color: red; display: <?= $errorMessage ? 'block' : 'none' ?>;">
                     <p>No se permite ese color</p>
                 </div>
-                <button type="submit">Enviar</button>
+                <div>
+                    <button type="submit">Editar</button>
+                    <button type="submit" name="reset" value="reset">Cancelar</button>
+                </div>
+                
             </form>
             <?php endif; ?>
         </section>
     </main>
 </body>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const links = document.querySelectorAll('.delete-link');
+
+    links.forEach(link => {
+        const normalIcon = link.querySelector('i.fa-trash');
+        const beatFadeIcon = document.createElement('i');
+
+        beatFadeIcon.className = 'fa-solid fa-trash fa-beat-fade icon-beat-fade';
+        beatFadeIcon.style.opacity = 0; // Inicialmente oculto
+        link.querySelector('.icon').appendChild(beatFadeIcon);
+
+        link.addEventListener('mouseover', () => {
+            normalIcon.style.opacity = 0; // Oculta el icono normal
+            beatFadeIcon.style.opacity = 1; // Muestra el icono con efecto
+        });
+
+        link.addEventListener('mouseout', () => {
+            normalIcon.style.opacity = 1; // Muestra de nuevo el icono normal
+            beatFadeIcon.style.opacity = 0; // Oculta el icono con efecto
+        });
+    });
+});
+</script>
+
+
 </html>

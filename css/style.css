@@ -78,3 +78,15 @@ form {
     text-align: center;
     display: none;
 }
+
+.delete-link .icon {
+    transition: all 0.3s ease;
+}
+
+.delete-link:hover .icon .icon-normal {
+    opacity: 0; /* Oculta el icono normal */
+}
+
+.delete-link:hover .icon .icon-beat-fade {
+    opacity: 1; /* Muestra el icono de papelera con efecto */
+}

@@ -19,9 +19,11 @@ if (!in_array(strtolower($color), $coloresValidos)) {
     exit;
 }
 
-$queryUpdate = "UPDATE colores SET usuario = ?, color = ? WHERE id_colores = ?";
-$sqlUpdate = $conn->prepare($queryUpdate);
-$sqlUpdate->execute([$usuario, $color, $id]);
+if (!$_GET["reset"]){
+    $queryUpdate = "UPDATE colores SET usuario = ?, color = ? WHERE id_colores = ?";
+    $sqlUpdate = $conn->prepare($queryUpdate);
+    $sqlUpdate->execute([$usuario, $color, $id]);
+}
 
 $sqlUpdate = null;
 $conn = null;
